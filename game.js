@@ -5,7 +5,10 @@ const bottomLoading = document.getElementById('bottom-loading');
 const uiLevel = document.getElementById('ui-level');
 const batteryBar = document.getElementById('battery-bar');
 const trapBtn = document.getElementById('trap-btn');
-const modeSelect = document.getElementById('mode-select'); // ★追加
+const modeSelect = document.getElementById('mode-select');
+
+const gameOverModal = document.getElementById('game-over-modal');
+const gameOverText = document.getElementById('game-over-text');
 
 let currentLevel = 1;
 let battery = 100;
@@ -16,47 +19,98 @@ let isTargetGenerated = false;
 let loadCount = 0;
 let currentTargetData = null;
 
+let penaltyCount = 0; 
+
 const postCallbacks = {
   onTarget: () => {
-    alert(`レベル ${currentLevel} クリア！\n次のレベルに進みます。`);
-    currentLevel++;
-    startLevel();
+    if(!isPlaying) return;
+    
+    const flash = document.createElement('div');
+    flash.className = 'level-up-flash';
+    document.body.appendChild(flash);
+    
+    setTimeout(() => {
+      flash.remove();
+      currentLevel++;
+      startLevel();
+    }, 500); 
   },
   onPenalty: (msg, damage) => {
     if(!isPlaying) return;
-    alert(msg + `\nバッテリー -${damage}%`);
+    penaltyCount++;
     reduceBattery(damage);
+
+    // ★修正：エラーの原因だった 'game-container' を 'app' に戻しました！
+    const container = document.getElementById('app');
+    container.classList.add('glitch');
+    setTimeout(() => {
+      container.classList.remove('glitch');
+    }, 300); 
   }
 };
 
 function reduceBattery(amount) {
   battery -= amount;
+  
+  // ★修正：ここも 'app' に戻しました！
+  const container = document.getElementById('app');
+  
   if (battery <= 0) {
     battery = 0;
     isPlaying = false;
     clearInterval(batteryTimer);
-    modeSelect.disabled = false; // ★ゲームオーバーでモード切替ロック解除
-    alert("スマホのバッテリーが切れました...ゲームオーバー！\nレベル1からやり直します。");
-    currentLevel = 1;
+    modeSelect.disabled = false;
+    container.classList.remove('low-battery-alert');
+    showGameOverModal();
   }
   
   batteryBar.style.width = battery + "%";
   if (battery > 50) batteryBar.style.background = "#28a745";
   else if (battery > 20) batteryBar.style.background = "#ffc107";
   else batteryBar.style.background = "#dc3545";
+
+  if (battery <= 20 && battery > 0) {
+    container.classList.add('low-battery-alert');
+  } else {
+    container.classList.remove('low-battery-alert');
+  }
 }
+
+function showGameOverModal() {
+  const modeName = modeSelect.options[modeSelect.selectedIndex].text;
+  const shareString = `📱 SNS Lost Post\n🔋 バッテリー切れ...\n💀 記録：Lv.${currentLevel}（${modeName}）\n👁️ 偽物に${penaltyCount}回騙された。\n#SNSLostPost #謎言語SNS`;
+  gameOverText.innerText = shareString;
+  gameOverModal.style.display = 'flex';
+}
+
+window.copyShareText = function() {
+  const textToCopy = gameOverText.innerText;
+  navigator.clipboard.writeText(textToCopy).then(() => {
+    alert("クリップボードにコピーしました！\nX(旧Twitter)などのSNSに貼り付けてシェアしてください。");
+  }).catch(err => {
+    alert("コピーに失敗しました。テキストを選択して手動でコピーしてください。");
+  });
+};
+
+window.closeGameOverAndRetry = function() {
+  gameOverModal.style.display = 'none';
+  currentLevel = 1;
+  penaltyCount = 0; 
+  startLevel();
+};
 
 function startLevel() {
   isPlaying = false;
   clearInterval(batteryTimer);
   battery = 100;
+  
+  if(currentLevel === 1) penaltyCount = 0;
+
   reduceBattery(0);
   uiLevel.innerText = currentLevel;
   timeline.innerHTML = '';
   trapBtn.style.display = 'none';
-  
-  modeSelect.disabled = true; // ★ゲーム開始時にモード切替をロック（ズル防止）
-
+  modeSelect.disabled = true;
   isTargetGenerated = false;
   loadCount = 0;
   currentTargetData = DATA_POOL.targets[Math.floor(Math.random() * DATA_POOL.targets.length)];
@@ -75,7 +129,7 @@ function startLevel() {
       timeline.innerHTML = '';
       isPlaying = true; 
       loadMorePosts(); 
-      batteryTimer = setInterval(() => reduceBattery(1), 1000);
+      batteryTimer = setInterval(() => reduceBattery(1), 1000); 
     }, 1500);
   }, peekTime);
 }
@@ -132,7 +186,10 @@ window.addEventListener('scroll', () => {
 trapBtn.onclick = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
   trapBtn.style.display = 'none';
-  postCallbacks.onPenalty("ああっ！誤タップで一番上に戻ってしまった！", 10);
+  postCallbacks.onPenalty("", 10);
 };
 
-document.getElementById('header').onclick = startLevel;
+document.getElementById('header').onclick = () => {
+  currentLevel = 1;
+  startLevel();
+};
