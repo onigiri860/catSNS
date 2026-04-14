@@ -79,3 +79,13 @@ body { font-family: -apple-system, sans-serif; background-color: #f0f2f5; color:
   0% { opacity: 1; }
   100% { opacity: 0; }
 }
+
+/* 独自イラスト（絵文字）をテキストの行に自然になじませる設定 */
+.alien-img {
+  height: 1.5em; /* 文字の高さに合わせる（大きくしたい場合は 1.5em などに調整） */
+  width: auto;   /* 縦横の比率を崩さない */
+  vertical-align: middle; /* 行の真ん中（テキストのベースライン）に揃える */
+  margin: 0 1px; /* 画像と画像、画像と文字の間にほんの少しだけ隙間をあける */
+  display: inline-block;
+  pointer-events: none; /* スマホで画像を長押しして保存メニューが出るのを防ぐ */
+}
