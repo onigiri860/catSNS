@@ -80,12 +80,29 @@ body { font-family: -apple-system, sans-serif; background-color: #f0f2f5; color:
   100% { opacity: 0; }
 }
 
-/* 独自イラスト（絵文字）をテキストの行に自然になじませる設定 */
+/* --- 投稿テキスト全体のサイズを上げる --- */
+.post-text {
+  font-size: 30px;    /* 15pxから18px（または20px）にアップ */
+  line-height: 1.8;   /* イラストが大きくなるので、行間を少し広めに設定 */
+  word-wrap: break-word;
+  margin-bottom: 8px;
+}
+
+/* --- イラスト（独自文字）のサイズをさらに大きくする --- */
 .alien-img {
-  height: 1.5em; /* 文字の高さに合わせる（大きくしたい場合は 1.5em などに調整） */
-  width: auto;   /* 縦横の比率を崩さない */
-  vertical-align: middle; /* 行の真ん中（テキストのベースライン）に揃える */
-  margin: 0 1px; /* 画像と画像、画像と文字の間にほんの少しだけ隙間をあける */
+  /* 1.2emから1.6emにアップ。1.0emが文字と同じ高さなので、少しはみ出すくらいが丁度いいです */
+  height: 2.2em; 
+  
+  width: auto;
+  vertical-align: middle;
+  
+  /* イラスト同士がくっつきすぎないように横の隙間を調整 */
+  margin: 0 2px; 
+  
   display: inline-block;
-  pointer-events: none; /* スマホで画像を長押しして保存メニューが出るのを防ぐ */
+  pointer-events: none;
+  
+  /* 少しだけ浮いているように見える場合は、以下の値を調整してください */
+  position: relative;
+  top: -1px; 
 }
